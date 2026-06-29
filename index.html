@@ -3,8 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>自然輸入法 注音CSV 產生器</title>
+<title>注音CSV 產生器（自然輸入法 + 華碩智慧輸入法）</title>
 <style>
+  /* === 200% 字體基準：原本 16px → 32px，所有 rem 自動兩倍 === */
+  html { font-size: 18px; }
+
   :root {
     --cream: #fbf1d7;
     --peach: #fad6b5;
@@ -17,50 +20,51 @@
     --border: #e8e8e8;
   }
   * { box-sizing: border-box; }
-  html, body { background: #ffffff; }
   body {
     font-family: "Microsoft JhengHei", "PingFang TC", "Helvetica Neue", sans-serif;
+    background: #ffffff;
     color: var(--text);
     margin: 0;
-    padding: 24px;
+    padding: 1.5rem;
     line-height: 1.6;
+    font-size: 0.875rem;
   }
-  .app { max-width: 1200px; margin: 0 auto; }
+  .app { max-width: 80rem; margin: 0 auto; }
   header {
     background: var(--cream);
-    padding: 20px 24px;
-    border-radius: 12px;
-    margin-bottom: 20px;
+    padding: 1.25rem 1.5rem;
+    border-radius: 0.75rem;
+    margin-bottom: 1.25rem;
   }
-  header h1 { margin: 0 0 6px; font-size: 22px; }
-  header p { margin: 0; color: var(--text-light); font-size: 14px; }
-  main { display: grid; grid-template-columns: 1fr 1.4fr; gap: 20px; }
-  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  header h1 { margin: 0 0 0.375rem; font-size: 1.375rem; }
+  header p { margin: 0; color: var(--text-light); font-size: 0.875rem; }
+  main { display: grid; grid-template-columns: 1fr 1.6fr; gap: 1.25rem; }
+  @media (max-width: 1200px) { main { grid-template-columns: 1fr; } }
   section {
     background: #ffffff;
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px;
+    border-radius: 0.75rem;
+    padding: 1.125rem;
   }
-  section h2 { margin: 0 0 12px; font-size: 16px; }
+  section h2 { margin: 0 0 0.75rem; font-size: 1rem; }
   textarea {
     width: 100%;
-    height: 360px;
+    height: 16rem;
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
     font-family: inherit;
-    font-size: 14px;
+    font-size: 0.875rem;
     resize: vertical;
     background: #fafafa;
   }
   textarea:focus { outline: none; border-color: var(--aqua); background: #fff; }
-  .actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .actions { display: flex; gap: 0.625rem; margin-top: 0.75rem; flex-wrap: wrap; }
   button {
-    padding: 10px 18px;
+    padding: 0.625rem 1.125rem;
     border: none;
-    border-radius: 8px;
-    font-size: 14px;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
     font-family: inherit;
     cursor: pointer;
     font-weight: 500;
@@ -70,63 +74,66 @@
   button:disabled { opacity: 0.4; cursor: not-allowed; }
   .btn-primary { background: var(--mint); color: var(--text); }
   .btn-secondary { background: #f2f2f2; color: var(--text); }
-  .btn-download { background: var(--pink); color: #ffffff; }
-  .btn-copy { background: var(--aqua); color: var(--text); }
+  .btn-download-1 { background: var(--aqua); color: var(--text); }
+  .btn-download-2 { background: var(--pink); color: #ffffff; }
   .stats {
-    display: flex; gap: 16px; flex-wrap: wrap;
-    margin-bottom: 14px; padding: 10px 14px;
-    background: var(--mint); border-radius: 8px; font-size: 14px;
+    display: flex; gap: 1rem; flex-wrap: wrap;
+    margin-bottom: 0.875rem; padding: 0.625rem 0.875rem;
+    background: var(--mint); border-radius: 0.5rem; font-size: 0.875rem;
   }
-  .stats b { font-size: 17px; margin: 0 3px; }
+  .stats b { font-size: 1.0625rem; margin: 0 0.1875rem; }
   .stats .ok b { color: #4a9b6c; }
   .stats .warn b { color: #c98a3b; }
   .stats .err b { color: #c45656; }
   .table-wrap {
-    max-height: 440px; overflow-y: auto;
-    border: 1px solid var(--border); border-radius: 8px;
+    max-height: 22rem; overflow: auto;
+    border: 1px solid var(--border); border-radius: 0.5rem;
   }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; min-width: 44rem; }
   thead { background: var(--cream); position: sticky; top: 0; z-index: 1; }
-  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
-  th { font-weight: 600; font-size: 13px; }
-  td.word { font-weight: 500; }
+  th, td { padding: 0.5rem 0.625rem; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  th { font-weight: 600; font-size: 0.8125rem; }
+  td.word { font-weight: 500; white-space: nowrap; }
   td input.zhuyin-edit {
-    width: 100%; border: 1px solid transparent; background: transparent;
-    padding: 5px 7px; border-radius: 4px; font-family: inherit; font-size: 13px;
+    width: 100%; min-width: 10rem;
+    border: 1px solid transparent; background: transparent;
+    padding: 0.3125rem 0.4375rem; border-radius: 0.25rem;
+    font-family: inherit; font-size: 0.8125rem;
   }
   td input.zhuyin-edit:hover { border-color: var(--border); background: #fafafa; }
   td input.zhuyin-edit:focus { outline: none; border-color: var(--aqua); background: #fff; }
   tr.status-warn { background: #fffaf0; }
   tr.status-err { background: #fff4f4; }
-  td.st { font-size: 12px; white-space: nowrap; }
+  td.st { font-size: 0.75rem; white-space: nowrap; }
   td.st.ok { color: #4a9b6c; }
   td.st.warn { color: #c98a3b; }
   td.st.err { color: #c45656; }
-  .empty { text-align: center; padding: 40px 20px; color: var(--text-light); font-size: 14px; }
-  .hint { font-size: 12px; color: var(--text-light); margin-top: 8px; line-height: 1.5; }
-  .loading { text-align: center; padding: 20px; color: var(--text-light); font-size: 13px; }
+  .empty { text-align: center; padding: 2.5rem 1.25rem; color: var(--text-light); font-size: 0.875rem; }
+  .hint { font-size: 0.75rem; color: var(--text-light); margin-top: 0.5rem; line-height: 1.5; }
+  .badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 0.5rem; font-size: 0.6875rem; margin-right: 0.25rem; }
+  .badge-natural { background: var(--mint); color: var(--text); }
+  .badge-asus { background: var(--lilac); color: var(--text); }
 </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <h1>🎀 自然輸入法 注音CSV 產生器</h1>
-    <p>貼上詞彙（一行一個），自動產生注音、輸出可直接匯入的備份格式 CSV</p>
+    <h1>🎀 注音CSV 產生器</h1>
+    <p>支援<span class="badge badge-natural">自然輸入法</span><span class="badge badge-asus">華碩智慧輸入法</span>兩種格式同步產生。貼上詞彙（一行一個），自動產生注音、可獨立編輯、分別下載對應格式。</p>
   </header>
 
   <main>
     <section>
       <h2>① 貼上詞彙</h2>
       <textarea id="wordInput" placeholder="一行一個詞，例如：
-感冒
-流感
-頭痛
-偏頭痛"></textarea>
+台灣
+台北市
+今天天氣真好"></textarea>
       <div class="actions">
         <button id="convertBtn" class="btn-primary">產生注音</button>
         <button id="clearBtn" class="btn-secondary">清空</button>
       </div>
-      <p class="hint">重複的詞、空白行會自動忽略；轉換後可在右側表格直接微調注音。</p>
+      <p class="hint">重複的詞、空白行會自動忽略；轉換後可在右側表格直接微調注音，兩種輸入法的注音欄獨立編輯。</p>
     </section>
 
     <section>
@@ -141,22 +148,27 @@
         <table id="resultTable">
           <thead>
             <tr>
-              <th style="width:40px">#</th>
-              <th style="width:110px">詞彙</th>
-              <th>注音（可直接編輯）</th>
-              <th style="width:110px">狀態</th>
+              <th style="width:3rem">#</th>
+              <th style="width:7rem">詞彙</th>
+              <th><span class="badge badge-natural">自然</span>注音（可編輯）</th>
+              <th><span class="badge badge-asus">華碩</span>注音（可編輯）</th>
+              <th style="width:7rem">狀態</th>
             </tr>
           </thead>
           <tbody id="resultBody">
-            <tr><td colspan="4" class="empty">尚無資料，請先點「產生注音」</td></tr>
+            <tr><td colspan="5" class="empty">尚無資料，請先點「產生注音」</td></tr>
           </tbody>
         </table>
       </div>
       <div class="actions">
-        <button id="downloadBtn" class="btn-download" disabled>下載 CSV 檔</button>
-        <button id="copyBtn" class="btn-copy" disabled>複製內容</button>
+        <button id="downloadNaturalBtn" class="btn-download-1" disabled>下載 自然輸入法 CSV</button>
+        <button id="downloadAsusBtn" class="btn-download-2" disabled>下載 華碩智慧 TXT</button>
       </div>
-      <p class="hint">⚠ <b>破音字務必檢查</b>：人名（如「中風」的中）、外來語、單字多音的情況，請點注音欄直接改。CSV 為自然輸入法備份格式（UTF-8 with BOM、CRLF、含 Begin 標記）。</p>
+      <p class="hint">
+        ⚠ 含破音字務必檢查。<br>
+        自然輸入法：UTF-8 with BOM、CRLF、含 Begin 標記、注音用連字號連接、一聲不標。<br>
+        華碩智慧輸入法：UTF-8 無 BOM、CRLF、詞與注音以兩個半形空格分隔、注音直接連接、一聲標 ˉ。
+      </p>
     </section>
   </main>
 </div>
@@ -176,7 +188,10 @@
     'ǖ':['ü',1],'ǘ':['ü',2],'ǚ':['ü',3],'ǜ':['ü',4],
     'ü':['ü',0]
   };
-  const TONE_SUFFIX = {0:'˙', 1:'', 2:'ˊ', 3:'ˇ', 4:'ˋ', 5:'˙'};
+  // 自然輸入法：1 聲不標
+  const TONE_SUFFIX_NATURAL = {0:'˙', 1:'', 2:'ˊ', 3:'ˇ', 4:'ˋ'};
+  // 華碩智慧輸入法：1 聲標 ˉ
+  const TONE_SUFFIX_ASUS = {0:'˙', 1:'ˉ', 2:'ˊ', 3:'ˇ', 4:'ˋ'};
 
   // === 全域資料：在 DOMContentLoaded 之前宣告 ===
   let records = [];
@@ -190,8 +205,8 @@
     return String(s).replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
   }
 
-  // === 拼音（帶音調符號）-> 注音 ===
-  function pinyinToZhuyin(py) {
+  // === 拼音（帶音調符號）-> 注音音節 [純注音, 音調] ===
+  function parsePinyin(py) {
     let plain = '';
     let tone = 1;
     let toneFound = false;
@@ -204,54 +219,48 @@
         plain += ch;
       }
     }
-    // 把 ü 轉成 v（pypinyin 對照表用 v）
     const lookup = plain.replace(/ü/g, 'v');
     const base = PINYIN_TO_ZHUYIN[lookup];
     if (!base) return null;
-    return base + TONE_SUFFIX[tone];
+    return { base: base, tone: tone };
   }
 
-  // === 核心：轉換單一詞 ===
+  // === 核心：轉換單一詞，同時產出兩種格式 ===
   function convertOne(word) {
     for (const ch of word) {
       if (!isChineseChar(ch)) {
-        return { word: word, zhuyin: '', status: 'err', note: '含非中文' };
+        return { word: word, zhuyinNatural: '', zhuyinAsus: '', status: 'err', note: '含非中文' };
       }
     }
     let arr = null;
     try {
-      arr = window.pinyinPro.pinyin(word, {
-        type: 'array',
-        toneType: 'symbol'
-      });
+      arr = window.pinyinPro.pinyin(word, { type: 'array', toneType: 'symbol' });
     } catch (e) {
-      return { word: word, zhuyin: '', status: 'err', note: '拼音轉換錯誤' };
+      return { word: word, zhuyinNatural: '', zhuyinAsus: '', status: 'err', note: '拼音轉換錯誤' };
     }
     if (!arr || arr.length === 0) {
-      return { word: word, zhuyin: '', status: 'err', note: '無法取得拼音' };
+      return { word: word, zhuyinNatural: '', zhuyinAsus: '', status: 'err', note: '無法取得拼音' };
     }
     if (arr.length !== word.length) {
-      return { word: word, zhuyin: '', status: 'err', note: '音節數不符' };
+      return { word: word, zhuyinNatural: '', zhuyinAsus: '', status: 'err', note: '音節數不符' };
     }
-    const zhuyinArr = [];
+    const parsed = [];
     for (const py of arr) {
-      const z = pinyinToZhuyin(py);
-      if (!z) {
-        return { word: word, zhuyin: '', status: 'err', note: '注音對照失敗:' + py };
+      const p = parsePinyin(py);
+      if (!p) {
+        return { word: word, zhuyinNatural: '', zhuyinAsus: '', status: 'err', note: '注音對照失敗:' + py };
       }
-      zhuyinArr.push(z);
+      parsed.push(p);
     }
-    // 偵測破音字（單字有多個讀音）
+    // 組裝兩種格式
+    const natural = parsed.map(p => p.base + TONE_SUFFIX_NATURAL[p.tone]).join('-');
+    const asus = parsed.map(p => p.base + TONE_SUFFIX_ASUS[p.tone]).join('');
+    // 偵測破音字
     let hasPoly = false;
     for (const ch of word) {
       try {
-        const multi = window.pinyinPro.pinyin(ch, {
-          multiple: true,
-          type: 'array',
-          toneType: 'symbol'
-        });
+        const multi = window.pinyinPro.pinyin(ch, { multiple: true, type: 'array', toneType: 'symbol' });
         if (multi && multi.length > 1) {
-          // 去重複（pinyin-pro 可能回傳同音多次）
           const uniq = new Set(multi);
           if (uniq.size > 1) { hasPoly = true; break; }
         }
@@ -259,7 +268,8 @@
     }
     return {
       word: word,
-      zhuyin: zhuyinArr.join('-'),
+      zhuyinNatural: natural,
+      zhuyinAsus: asus,
       status: hasPoly ? 'warn' : 'ok',
       note: hasPoly ? '含破音字' : '正常'
     };
@@ -288,7 +298,7 @@
   function renderTable() {
     const tbody = document.getElementById('resultBody');
     if (records.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" class="empty">尚無資料，請先點「產生注音」</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">尚無資料，請先點「產生注音」</td></tr>';
       return;
     }
     const rowsHtml = records.map((r, i) => {
@@ -296,7 +306,8 @@
       return '<tr class="status-' + r.status + '">' +
              '<td>' + (i + 1) + '</td>' +
              '<td class="word">' + escapeHtml(r.word) + '</td>' +
-             '<td><input type="text" class="zhuyin-edit" data-index="' + i + '" value="' + escapeHtml(r.zhuyin) + '"></td>' +
+             '<td><input type="text" class="zhuyin-edit" data-index="' + i + '" data-field="zhuyinNatural" value="' + escapeHtml(r.zhuyinNatural) + '"></td>' +
+             '<td><input type="text" class="zhuyin-edit" data-index="' + i + '" data-field="zhuyinAsus" value="' + escapeHtml(r.zhuyinAsus) + '"></td>' +
              '<td class="st ' + r.status + '">' + icon + ' ' + escapeHtml(r.note) + '</td>' +
              '</tr>';
     }).join('');
@@ -321,11 +332,12 @@
     document.getElementById('statErr').textContent = errCount;
   }
 
-  // === 編輯注音欄 ===
+  // === 編輯注音欄（分別處理兩種格式） ===
   function onZhuyinEdit(e) {
     const idx = parseInt(e.target.dataset.index, 10);
-    if (isNaN(idx) || !records[idx]) return;
-    records[idx].zhuyin = e.target.value;
+    const field = e.target.dataset.field;
+    if (isNaN(idx) || !records[idx] || !field) return;
+    records[idx][field] = e.target.value;
   }
 
   // === 清空 ===
@@ -340,72 +352,70 @@
   // === 按鈕狀態 ===
   function updateButtons() {
     const has = records.length > 0;
-    document.getElementById('downloadBtn').disabled = !has;
-    document.getElementById('copyBtn').disabled = !has;
+    document.getElementById('downloadNaturalBtn').disabled = !has;
+    document.getElementById('downloadAsusBtn').disabled = !has;
   }
 
-  // === 產生 CSV 內容（備份格式） ===
-  function buildCsv() {
+  // === 產生自然輸入法 CSV ===
+  function buildNaturalCsv() {
     const lines = ['<!--Going12ProfileBackUpCsv-Begin-->,'];
     for (const r of records) {
-      const z = (r.zhuyin || '').trim();
+      const z = (r.zhuyinNatural || '').trim();
       lines.push(r.word + ',' + z);
     }
     return lines.join('\r\n') + '\r\n';
   }
 
-  // === 下載 CSV ===
-  function downloadCsv() {
-    const csv = buildCsv();
-    const BOM = '\uFEFF';
-    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+  // === 產生華碩智慧輸入法 TXT ===
+  function buildAsusTxt() {
+    const lines = [];
+    for (const r of records) {
+      const z = (r.zhuyinAsus || '').trim();
+      // 華碩格式：詞 + 兩個半形空格 + 注音
+      lines.push(r.word + '  ' + z);
+    }
+    return lines.join('\r\n') + '\r\n';
+  }
+
+  // === 下載 ===
+  function timestamp() {
     const now = new Date();
     const pad = n => String(n).padStart(2, '0');
-    const stamp = now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) +
-                  '_' + pad(now.getHours()) + pad(now.getMinutes());
+    return now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) +
+           '_' + pad(now.getHours()) + pad(now.getMinutes());
+  }
+
+  function downloadNatural() {
+    const csv = buildNaturalCsv();
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8' });
+    triggerDownload(blob, 'Going12Backup_Profile_' + timestamp() + '.csv');
+  }
+
+  function downloadAsus() {
+    const txt = buildAsusTxt();
+    // 華碩格式：不加 BOM
+    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+    triggerDownload(blob, 'UserDictionary_' + timestamp() + '.txt');
+  }
+
+  function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
     a.href = url;
-    a.download = 'Going12Backup_Profile_' + stamp + '.csv';
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  // === 複製到剪貼簿 ===
-  function copyCsv() {
-    const csv = buildCsv();
-    const done = () => flashButton('copyBtn', '已複製 ✓');
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(csv).then(done).catch(() => fallbackCopy(csv, done));
-    } else {
-      fallbackCopy(csv, done);
-    }
-  }
-  function fallbackCopy(text, done) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); done(); } catch (e) { /* ignore */ }
-    document.body.removeChild(ta);
-  }
-  function flashButton(id, msg) {
-    const btn = document.getElementById(id);
-    const original = btn.textContent;
-    btn.textContent = msg;
-    setTimeout(() => { btn.textContent = original; }, 1500);
-  }
-
   // === 初始化 ===
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('convertBtn').addEventListener('click', convertAll);
     document.getElementById('clearBtn').addEventListener('click', clearAll);
-    document.getElementById('downloadBtn').addEventListener('click', downloadCsv);
-    document.getElementById('copyBtn').addEventListener('click', copyCsv);
+    document.getElementById('downloadNaturalBtn').addEventListener('click', downloadNatural);
+    document.getElementById('downloadAsusBtn').addEventListener('click', downloadAsus);
     renderTable();
     renderStats();
     updateButtons();
