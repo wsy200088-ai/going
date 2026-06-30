@@ -29,7 +29,7 @@
     line-height: 1.6;
     font-size: 0.875rem;
   }
-  .app { max-width: 80rem; margin: 0 auto; }
+  .app { max-width: 90rem; margin: 0 auto; }
   header {
     background: var(--cream);
     padding: 1.25rem 1.5rem;
@@ -39,7 +39,7 @@
   header h1 { margin: 0 0 0.375rem; font-size: 1.375rem; }
   header p { margin: 0; color: var(--text-light); font-size: 0.875rem; }
   main { display: grid; grid-template-columns: 1fr 1.6fr; gap: 1.25rem; }
-  @media (max-width: 1200px) { main { grid-template-columns: 1fr; } }
+  @media (max-width: 1400px) { main { grid-template-columns: 1fr; } }
   section {
     background: #ffffff;
     border: 1px solid var(--border);
@@ -76,6 +76,7 @@
   .btn-secondary { background: #f2f2f2; color: var(--text); }
   .btn-download-1 { background: var(--aqua); color: var(--text); }
   .btn-download-2 { background: var(--pink); color: #ffffff; }
+  .btn-download-3 { background: var(--peach); color: var(--text); }
   .stats {
     display: flex; gap: 1rem; flex-wrap: wrap;
     margin-bottom: 0.875rem; padding: 0.625rem 0.875rem;
@@ -89,7 +90,7 @@
     max-height: 22rem; overflow: auto;
     border: 1px solid var(--border); border-radius: 0.5rem;
   }
-  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; min-width: 44rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; min-width: 56rem; }
   thead { background: var(--cream); position: sticky; top: 0; z-index: 1; }
   th, td { padding: 0.5rem 0.625rem; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
   th { font-weight: 600; font-size: 0.8125rem; }
@@ -113,13 +114,14 @@
   .badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 0.5rem; font-size: 0.6875rem; margin-right: 0.25rem; }
   .badge-natural { background: var(--mint); color: var(--text); }
   .badge-asus { background: var(--lilac); color: var(--text); }
+  .badge-msime { background: var(--cream); color: var(--text); border: 1px solid var(--peach); }
 </style>
 </head>
 <body>
 <div class="app">
   <header>
     <h1>🎀 注音CSV 產生器</h1>
-    <p>支援<span class="badge badge-natural">自然輸入法</span><span class="badge badge-asus">華碩智慧輸入法</span>兩種格式同步產生。貼上詞彙（一行一個），自動產生注音、可獨立編輯、分別下載對應格式。</p>
+    <p>支援<span class="badge badge-natural">自然輸入法</span><span class="badge badge-asus">華碩智慧輸入法</span><span class="badge badge-msime">微軟新注音</span>三種格式同步產生。貼上詞彙（一行一個），自動產生注音、可獨立編輯、分別下載對應格式。</p>
   </header>
 
   <main>
@@ -152,22 +154,25 @@
               <th style="width:7rem">詞彙</th>
               <th><span class="badge badge-natural">自然</span>注音（可編輯）</th>
               <th><span class="badge badge-asus">華碩</span>注音（可編輯）</th>
+              <th><span class="badge badge-msime">微軟</span>注音（可編輯）</th>
               <th style="width:7rem">狀態</th>
             </tr>
           </thead>
           <tbody id="resultBody">
-            <tr><td colspan="5" class="empty">尚無資料，請先點「產生注音」</td></tr>
+            <tr><td colspan="6" class="empty">尚無資料，請先點「產生注音」</td></tr>
           </tbody>
         </table>
       </div>
       <div class="actions">
         <button id="downloadNaturalBtn" class="btn-download-1" disabled>下載 自然輸入法 CSV</button>
         <button id="downloadAsusBtn" class="btn-download-2" disabled>下載 華碩智慧 TXT</button>
+        <button id="downloadMsimeBtn" class="btn-download-3" disabled>下載 微軟新注音 TXT</button>
       </div>
       <p class="hint">
         ⚠ 含破音字務必檢查。<br>
         自然輸入法：UTF-8 with BOM、CRLF、含 Begin 標記、注音用連字號連接、一聲不標。<br>
-        華碩智慧輸入法：UTF-8 無 BOM、CRLF、詞與注音以兩個半形空格分隔、注音直接連接、一聲標 ˉ。
+        華碩智慧輸入法：UTF-8 無 BOM、CRLF、詞與注音以兩個半形空格分隔、注音直接連接、一聲標 ˉ。<br>
+        微軟新注音：UTF-16 LE with BOM、CRLF、音節固定 4 字位置（聲母／介音／韻母／聲調），缺位用全形空格佔位、一聲標 ˉ。
       </p>
     </section>
   </main>
@@ -192,6 +197,25 @@
   const TONE_SUFFIX_NATURAL = {0:'˙', 1:'', 2:'ˊ', 3:'ˇ', 4:'ˋ'};
   // 華碩智慧輸入法：1 聲標 ˉ
   const TONE_SUFFIX_ASUS = {0:'˙', 1:'ˉ', 2:'ˊ', 3:'ˇ', 4:'ˋ'};
+  // 微軟新注音：一聲標 ˉ
+  const TONE_SUFFIX_MSIME = {0:'˙', 1:'ˉ', 2:'ˊ', 3:'ˇ', 4:'ˋ'};
+  // 注音分類（給微軟新注音的 4 位拆解用）
+  const BOPO_INITIAL = new Set('ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙ');
+  const BOPO_MEDIAL = new Set('ㄧㄨㄩ');
+  const BOPO_FINAL = new Set('ㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦ');
+  const FULL_SPACE = '\u3000';
+
+  // 把注音字串（如 ㄍㄢ）拆成 4 位 [聲母, 介音, 韻母, 聲調]，缺位用全形空格
+  function bopomofoTo4Slot(bopoStr, tone) {
+    let initial = FULL_SPACE, medial = FULL_SPACE, final = FULL_SPACE;
+    for (const ch of bopoStr) {
+      if (BOPO_INITIAL.has(ch)) initial = ch;
+      else if (BOPO_MEDIAL.has(ch)) medial = ch;
+      else if (BOPO_FINAL.has(ch)) final = ch;
+    }
+    const toneCh = TONE_SUFFIX_MSIME[tone] || 'ˉ';
+    return initial + medial + final + toneCh;
+  }
 
   // === 全域資料：在 DOMContentLoaded 之前宣告 ===
   let records = [];
@@ -229,32 +253,33 @@
   function convertOne(word) {
     for (const ch of word) {
       if (!isChineseChar(ch)) {
-        return { word: word, zhuyinNatural: '', zhuyinAsus: '', status: 'err', note: '含非中文' };
+        return { word: word, zhuyinNatural: '', zhuyinAsus: '', zhuyinMsime: '', status: 'err', note: '含非中文' };
       }
     }
     let arr = null;
     try {
       arr = window.pinyinPro.pinyin(word, { type: 'array', toneType: 'symbol' });
     } catch (e) {
-      return { word: word, zhuyinNatural: '', zhuyinAsus: '', status: 'err', note: '拼音轉換錯誤' };
+      return { word: word, zhuyinNatural: '', zhuyinAsus: '', zhuyinMsime: '', status: 'err', note: '拼音轉換錯誤' };
     }
     if (!arr || arr.length === 0) {
-      return { word: word, zhuyinNatural: '', zhuyinAsus: '', status: 'err', note: '無法取得拼音' };
+      return { word: word, zhuyinNatural: '', zhuyinAsus: '', zhuyinMsime: '', status: 'err', note: '無法取得拼音' };
     }
     if (arr.length !== word.length) {
-      return { word: word, zhuyinNatural: '', zhuyinAsus: '', status: 'err', note: '音節數不符' };
+      return { word: word, zhuyinNatural: '', zhuyinAsus: '', zhuyinMsime: '', status: 'err', note: '音節數不符' };
     }
     const parsed = [];
     for (const py of arr) {
       const p = parsePinyin(py);
       if (!p) {
-        return { word: word, zhuyinNatural: '', zhuyinAsus: '', status: 'err', note: '注音對照失敗:' + py };
+        return { word: word, zhuyinNatural: '', zhuyinAsus: '', zhuyinMsime: '', status: 'err', note: '注音對照失敗:' + py };
       }
       parsed.push(p);
     }
     // 組裝兩種格式
     const natural = parsed.map(p => p.base + TONE_SUFFIX_NATURAL[p.tone]).join('-');
     const asus = parsed.map(p => p.base + TONE_SUFFIX_ASUS[p.tone]).join('');
+    const msime = parsed.map(p => bopomofoTo4Slot(p.base, p.tone)).join(' ');
     // 偵測破音字
     let hasPoly = false;
     for (const ch of word) {
@@ -270,6 +295,7 @@
       word: word,
       zhuyinNatural: natural,
       zhuyinAsus: asus,
+      zhuyinMsime: msime,
       status: hasPoly ? 'warn' : 'ok',
       note: hasPoly ? '含破音字' : '正常'
     };
@@ -298,7 +324,7 @@
   function renderTable() {
     const tbody = document.getElementById('resultBody');
     if (records.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty">尚無資料，請先點「產生注音」</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">尚無資料，請先點「產生注音」</td></tr>';
       return;
     }
     const rowsHtml = records.map((r, i) => {
@@ -308,6 +334,7 @@
              '<td class="word">' + escapeHtml(r.word) + '</td>' +
              '<td><input type="text" class="zhuyin-edit" data-index="' + i + '" data-field="zhuyinNatural" value="' + escapeHtml(r.zhuyinNatural) + '"></td>' +
              '<td><input type="text" class="zhuyin-edit" data-index="' + i + '" data-field="zhuyinAsus" value="' + escapeHtml(r.zhuyinAsus) + '"></td>' +
+             '<td><input type="text" class="zhuyin-edit" data-index="' + i + '" data-field="zhuyinMsime" value="' + escapeHtml(r.zhuyinMsime) + '"></td>' +
              '<td class="st ' + r.status + '">' + icon + ' ' + escapeHtml(r.note) + '</td>' +
              '</tr>';
     }).join('');
@@ -354,6 +381,7 @@
     const has = records.length > 0;
     document.getElementById('downloadNaturalBtn').disabled = !has;
     document.getElementById('downloadAsusBtn').disabled = !has;
+    document.getElementById('downloadMsimeBtn').disabled = !has;
   }
 
   // === 產生自然輸入法 CSV ===
@@ -375,6 +403,28 @@
       lines.push(r.word + '  ' + z);
     }
     return lines.join('\r\n') + '\r\n';
+  }
+
+  // === 產生微軟新注音 TXT ===
+  function buildMsimeTxt() {
+    const lines = [];
+    for (const r of records) {
+      const z = (r.zhuyinMsime || '');
+      // 微軟格式：詞 + 兩個半形空格 + 注音 + 兩個半形空格（結尾）
+      lines.push(r.word + '  ' + z + '  ');
+    }
+    return lines.join('\r\n') + '\r\n';
+  }
+
+  // === 字串轉 UTF-16 LE 位元組陣列（給微軟格式用） ===
+  function strToUtf16LE(str) {
+    const arr = new Uint8Array(str.length * 2);
+    for (let i = 0; i < str.length; i++) {
+      const code = str.charCodeAt(i);
+      arr[i * 2] = code & 0xFF;
+      arr[i * 2 + 1] = (code >> 8) & 0xFF;
+    }
+    return arr;
   }
 
   // === 下載 ===
@@ -399,6 +449,15 @@
     triggerDownload(blob, 'UserDictionary_' + timestamp() + '.txt');
   }
 
+  function downloadMsime() {
+    const txt = buildMsimeTxt();
+    // 微軟格式：UTF-16 LE + BOM (FF FE)
+    const bom = new Uint8Array([0xFF, 0xFE]);
+    const body = strToUtf16LE(txt);
+    const blob = new Blob([bom, body], { type: 'text/plain;charset=utf-16le' });
+    triggerDownload(blob, '微軟新注音使用者造詞_' + timestamp() + '.txt');
+  }
+
   function triggerDownload(blob, filename) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -416,6 +475,7 @@
     document.getElementById('clearBtn').addEventListener('click', clearAll);
     document.getElementById('downloadNaturalBtn').addEventListener('click', downloadNatural);
     document.getElementById('downloadAsusBtn').addEventListener('click', downloadAsus);
+    document.getElementById('downloadMsimeBtn').addEventListener('click', downloadMsime);
     renderTable();
     renderStats();
     updateButtons();
